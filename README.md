@@ -41,7 +41,7 @@
 ## 🔗 4. Интеграционный план
 
 ### 🔄 Схема взаимодействия
-
+```mermaid
 flowchart TD
     FE[🖥️ Frontend HTML/JS] -->|REST API (GET/POST/PUT/DELETE)| BE[⚡ Backend FastAPI]
     BE -->|ORM SQLAlchemy| DB[(🗄️ PostgreSQL)]
