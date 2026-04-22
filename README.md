@@ -44,6 +44,58 @@
 
 ---
 
+## 🚀 Быстрый старт
+
+### Требования
+- **Python**
+- **UV**
+- **Docker** и **Docker Compose** (для развертывания)
+- **.env** файл с конфигурацией (см. примеры ниже)
+
+### Установка зависимостей
+
+```bash
+uv sync
+pre-commit install
+```
+
+### Локальное развертывание
+
+#### 1. Создать .env файл
+
+```bash
+EXCEPT_LOG=true
+
+POSTGRES_USER=scheduler_user
+POSTGRES_PASSWORD=secret123
+POSTGRES_DB=    
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+
+```
+
+#### 2. Запустить PostgreSQL
+
+```bash
+docker-compose up -d
+```
+
+#### 3. Выполнить миграции БД
+
+```bash
+uv run alembic upgrade head
+```
+
+#### 4. Запустить приложение
+
+```bash
+# Локальный запуск с автоперезагрузкой
+uv run main.py
+```
+
+
+
+
 ## 🔗 4. Интеграционный план
 
 ### 🔄 Схема взаимодействия
