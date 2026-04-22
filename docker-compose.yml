@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16
+    container_name: scheduler-db
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  # app:
+  #   build: .
+  #   container_name: scheduler-app
+  #   depends_on:
+  #     - db
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+  #   command: uv run uvicorn main:app --host 0.0.0.0 --port 8000
+  #   ports:
+  #     - "8000:8000"
+
+volumes:
+  pg_data:
