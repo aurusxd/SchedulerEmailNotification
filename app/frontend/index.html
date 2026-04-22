@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Планировщик</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="workspace">
+    <main class="main-content">
+      <div class="auth-topbar">
+        <div class="auth-title">
+          <strong>Профиль</strong>
+          <span>Авторизуйтесь для работы с задачами</span>
+        </div>
+        <div class="auth-actions">
+          <button class="btn btn-primary" type="button">Вход</button>
+          <button class="btn" type="button">Регистрация</button>
+        </div>
+      </div>
+
+      <section class="dashboard-strip">
+        <article class="stat-card">
+          <span>Задач сегодня</span>
+          <strong>12</strong>
+        </article>
+        <article class="stat-card">
+          <span>В работе</span>
+          <strong>4</strong>
+        </article>
+        <article class="stat-card">
+          <span>Просрочено</span>
+          <strong>1</strong>
+        </article>
+        <article class="stat-card quick-actions">
+          <button class="btn" type="button">+ Новая задача</button>
+          <button class="btn" type="button">Экспорт</button>
+        </article>
+      </section>
+
+      <header class="views-bar">
+        <button class="view-tab active" type="button">Все задачи</button>
+        <button class="view-tab" type="button">По статусу</button>
+        <button class="view-tab" type="button">Мои задачи</button>
+      </header>
+
+      <section class="table-wrap">
+        <table class="tasks-table">
+          <thead>
+            <tr>
+              <th>Название задачи</th>
+              <th>Статус</th>
+              <th>Исполнитель</th>
+              <th>Срок</th>
+              <th>Приоритет</th>
+              <th>Тип задачи</th>
+              <th>Описание</th>
+              <th>Оценка</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Улучшить тексты на сайте</td>
+              <td><span class="pill done">Выполнено</span></td>
+              <td></td>
+              <td>
+                <button class="date-trigger" type="button" data-start="2026-02-01" data-end="2026-02-03">02/01/2026 - 02/03/2026</button>
+              </td>
+              <td><span class="pill danger">Высокий</span></td>
+              <td><span class="pill violet">Доработка</span></td>
+              <td>Обновить заголовок, чтобы лучше передавать ценность продукта</td>
+              <td><span class="pill amber">Средняя</span></td>
+            </tr>
+            <tr>
+              <td>Обновить справочный центр и FAQ</td>
+              <td><span class="pill progress">В процессе</span></td>
+              <td></td>
+              <td>
+                <button class="date-trigger" type="button" data-start="2026-02-15" data-end="2026-02-20">02/15/2026 - 02/20/2026</button>
+              </td>
+              <td><span class="pill amber">Средний</span></td>
+              <td><span class="pill mint">Запрос фичи</span></td>
+              <td>Обновить документы поддержки под новый пользовательский сценарий</td>
+              <td><span class="pill mint">Низкая</span></td>
+            </tr>
+            <tr>
+              <td>Опубликовать релиз-ноты</td>
+              <td><span class="pill neutral">Не начато</span></td>
+              <td></td>
+              <td>
+                <button class="date-trigger" type="button" data-start="2026-02-20" data-end="2026-02-28">02/20/2026 - 02/28/2026</button>
+              </td>
+              <td><span class="pill mint-outline">Низкий</span></td>
+              <td><span class="pill mint">Запрос фичи</span></td>
+              <td>Добавить обновления продукта в ближайшие релиз-ноты</td>
+              <td><span class="pill mint">Низкая</span></td>
+            </tr>
+            <tr>
+              <td>Купить пельмени</td>
+              <td><span class="pill neutral">Не начато</span></td>
+              <td></td>
+              <td>
+                <button class="date-trigger" type="button" data-start="2026-04-22" data-end="2026-04-22">04/22/2026</button>
+              </td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr class="new-task-row">
+              <td>Новая задача</td>
+              <td colspan="7"></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="date-popover hidden" id="deadlinePopover" aria-label="Deadline picker">
+        <h3>Дедлайны задачи</h3>
+        <label class="field">
+          <span>Начало выполнения</span>
+          <input id="startDateInput" type="date">
+        </label>
+        <label class="field">
+          <span>Конец выполнения</span>
+          <input id="endDateInput" type="date">
+        </label>
+        <div class="popover-actions">
+          <button class="btn btn-primary" id="saveDatesBtn" type="button">Сохранить</button>
+          <button class="btn" id="closePopoverBtn" type="button">Закрыть</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const popover = document.getElementById("deadlinePopover");
+    const startInput = document.getElementById("startDateInput");
+    const endInput = document.getElementById("endDateInput");
+    const saveBtn = document.getElementById("saveDatesBtn");
+    const closeBtn = document.getElementById("closePopoverBtn");
+    const triggers = document.querySelectorAll(".date-trigger");
+    const workspace = document.querySelector(".workspace");
+    let activeTrigger = null;
+
+    function formatDate(isoDate) {
+      if (!isoDate) return "";
+      const [year, month, day] = isoDate.split("-");
+      return month + "/" + day + "/" + year;
+    }
+
+    function formatDateRange(startDate, endDate) {
+      const startFormatted = formatDate(startDate);
+      const endFormatted = formatDate(endDate);
+      if (startFormatted && endFormatted) return startFormatted + " - " + endFormatted;
+      return endFormatted || startFormatted || "";
+    }
+
+    function openPopover(trigger) {
+      activeTrigger = trigger;
+      startInput.value = trigger.dataset.start || "";
+      endInput.value = trigger.dataset.end || "";
+
+      const triggerRect = trigger.getBoundingClientRect();
+      const workspaceRect = workspace.getBoundingClientRect();
+      popover.style.left = triggerRect.left - workspaceRect.left + 12 + "px";
+      popover.style.top = triggerRect.bottom - workspaceRect.top + 10 + "px";
+      popover.classList.remove("hidden");
+    }
+
+    function closePopover() {
+      popover.classList.add("hidden");
+      activeTrigger = null;
+    }
+
+    triggers.forEach((trigger) => {
+      trigger.addEventListener("click", (event) => {
+        event.stopPropagation();
+        openPopover(trigger);
+      });
+      trigger.textContent = formatDateRange(trigger.dataset.start, trigger.dataset.end);
+    });
+
+    saveBtn.addEventListener("click", () => {
+      if (!activeTrigger) return;
+      activeTrigger.dataset.start = startInput.value;
+      activeTrigger.dataset.end = endInput.value;
+      activeTrigger.textContent = formatDateRange(startInput.value, endInput.value);
+      closePopover();
+    });
+
+    closeBtn.addEventListener("click", closePopover);
+
+    document.addEventListener("click", (event) => {
+      if (popover.classList.contains("hidden")) return;
+      if (!popover.contains(event.target)) closePopover();
+    });
+  </script>
+</body>
+</html>
