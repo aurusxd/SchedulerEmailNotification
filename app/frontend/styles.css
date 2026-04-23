@@ -213,6 +213,24 @@ html, body {
   align-items: center;
 }
 
+.task-title-wrap {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.btn-danger {
+  border-color: #7a2b2b;
+  background: #3a1818;
+  color: #ffd7d7;
+}
+
+.btn-inline-delete {
+  white-space: nowrap;
+  padding: 7px 10px;
+}
+
 .inline-date-inputs {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -23,6 +23,13 @@ function incrementCount(counterElement) {
   counterElement.textContent = String(nextValue);
 }
 
+function decrementCount(counterElement) {
+  if (!counterElement) return;
+  const currentValue = Number.parseInt(counterElement.textContent || "0", 10);
+  const safeValue = Number.isNaN(currentValue) ? 0 : currentValue;
+  counterElement.textContent = String(Math.max(0, safeValue - 1));
+}
+
 function formatDate(isoDate) {
   if (!isoDate) return "";
   const [year, month, day] = isoDate.split("-");
@@ -67,6 +74,19 @@ tableBody.querySelectorAll(".date-trigger").forEach((trigger) => {
 });
 
 tableBody.addEventListener("click", (event) => {
+  const deleteBtn = event.target.closest(".delete-task-btn");
+  if (deleteBtn) {
+    const row = deleteBtn.closest("tr");
+    if (row) {
+      if (activeTrigger && row.contains(activeTrigger)) closePopover();
+      row.remove();
+      decrementCount(tasksTodayCount);
+      decrementCount(inProgressCount);
+      decrementCount(overdueCount);
+    }
+    return;
+  }
+
   const trigger = event.target.closest(".date-trigger");
   if (!trigger) return;
   event.stopPropagation();
@@ -91,9 +111,20 @@ addTaskBtn.addEventListener("click", () => {
   }
 
   const row = document.createElement("tr");
+  row.dataset.userAdded = "true";
 
   const titleCell = document.createElement("td");
-  titleCell.textContent = title;
+  const titleWrap = document.createElement("div");
+  titleWrap.className = "task-title-wrap";
+  const titleText = document.createElement("span");
+  titleText.textContent = title;
+  const deleteBtn = document.createElement("button");
+  deleteBtn.type = "button";
+  deleteBtn.className = "btn btn-danger btn-inline-delete delete-task-btn";
+  deleteBtn.textContent = "Удалить";
+  titleWrap.appendChild(titleText);
+  titleWrap.appendChild(deleteBtn);
+  titleCell.appendChild(titleWrap);
   row.appendChild(titleCell);
 
   row.appendChild(document.createElement("td")); // status
