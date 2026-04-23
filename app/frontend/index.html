@@ -65,7 +65,7 @@
               <td><span class="pill done">Выполнено</span></td>
               <td></td>
               <td>
-                02/01/2026 - 02/03/2026
+                <button class="date-trigger" type="button" data-start="2026-02-01" data-end="2026-02-03">02/01/2026 - 02/03/2026</button>
               </td>
               <td><span class="pill danger">Высокий</span></td>
               <td><span class="pill violet">Доработка</span></td>
@@ -77,7 +77,7 @@
               <td><span class="pill progress">В процессе</span></td>
               <td></td>
               <td>
-                02/15/2026 - 02/20/2026
+                <button class="date-trigger" type="button" data-start="2026-02-15" data-end="2026-02-20">02/15/2026 - 02/20/2026</button>
               </td>
               <td><span class="pill amber">Средний</span></td>
               <td><span class="pill mint">Запрос фичи</span></td>
@@ -89,7 +89,7 @@
               <td><span class="pill neutral">Не начато</span></td>
               <td></td>
               <td>
-                02/20/2026 - 02/28/2026
+                <button class="date-trigger" type="button" data-start="2026-02-20" data-end="2026-02-28">02/20/2026 - 02/28/2026</button>
               </td>
               <td><span class="pill mint-outline">Низкий</span></td>
               <td><span class="pill mint">Запрос фичи</span></td>
@@ -101,7 +101,7 @@
               <td><span class="pill neutral">Не начато</span></td>
               <td></td>
               <td>
-                04/22/2026
+                <button class="date-trigger" type="button" data-start="2026-04-22" data-end="2026-04-22">04/22/2026</button>
               </td>
               <td></td>
               <td></td>
@@ -119,6 +119,22 @@
             </tr>
           </tbody>
         </table>
+      </section>
+
+      <section class="date-popover hidden" id="deadlinePopover" aria-label="Deadline picker">
+        <h3>Дедлайны задачи</h3>
+        <label class="field">
+          <span>Начало выполнения</span>
+          <input id="startDateInput" type="date">
+        </label>
+        <label class="field">
+          <span>Конец выполнения</span>
+          <input id="endDateInput" type="date">
+        </label>
+        <div class="popover-actions">
+          <button class="btn btn-primary" id="saveDatesBtn" type="button">Сохранить</button>
+          <button class="btn" id="closePopoverBtn" type="button">Закрыть</button>
+        </div>
       </section>
     </main>
   </div>
