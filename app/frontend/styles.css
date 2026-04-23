@@ -49,6 +49,10 @@ html, body {
   gap: 8px;
 }
 
+.hidden {
+  display: none;
+}
+
 .stat-card {
   background: #06080c;
   border: 1px solid #1f2530;
@@ -190,7 +194,34 @@ html, body {
 .tasks-table td:nth-child(8) { width: 170px; }
 
 .new-task-row td {
-  color: #737d93;
+  background: #0b1119;
+}
+
+.table-input {
+  width: 100%;
+  border: 1px solid #3b4459;
+  border-radius: 8px;
+  padding: 7px 9px;
+  background: #1d2533;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.inline-name-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.inline-date-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.btn-inline-add {
+  white-space: nowrap;
+  padding: 7px 10px;
 }
 
 .pill {
@@ -252,7 +283,9 @@ html, body {
   font-size: 12px;
 }
 
-.field input {
+.field input,
+.field select,
+.field textarea {
   width: 100%;
   border: 1px solid #3b4459;
   border-radius: 8px;
@@ -260,6 +293,11 @@ html, body {
   background: #212836;
   color: var(--text);
   font-size: 13px;
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 72px;
 }
 
 .popover-actions {
@@ -275,6 +313,10 @@ html, body {
 
   .dashboard-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inline-date-inputs {
+    grid-template-columns: 1fr;
   }
 
   .date-popover {
