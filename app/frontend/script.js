@@ -2,6 +2,7 @@ const tableBody = document.querySelector(".tasks-table tbody");
 const openTaskFormBtn = document.getElementById("openTaskFormBtn");
 const addTaskBtn = document.getElementById("addTaskBtn");
 const taskNameInput = document.getElementById("taskNameInput");
+const taskStatusInput = document.getElementById("taskStatusInput");
 const tasksTodayCount = document.getElementById("tasksTodayCount");
 const inProgressCount = document.getElementById("inProgressCount");
 const overdueCount = document.getElementById("overdueCount");
@@ -11,9 +12,180 @@ const endInput = document.getElementById("endDateInput");
 const saveBtn = document.getElementById("saveDatesBtn");
 const closeBtn = document.getElementById("closePopoverBtn");
 let activeTrigger = null;
+const table = document.querySelector(".tasks-table");
+const tableHead = table?.querySelector("thead");
+
+function normalizeText(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function getCellText(cell) {
+  return normalizeText(cell?.textContent || "");
+}
+
+function getHeaderTitles() {
+  return Array.from(tableHead?.querySelectorAll("th") || []).map((th) => getCellText(th));
+}
+
+function getColumnIndexByTitle(title) {
+  return getHeaderTitles().findIndex((t) => t === title);
+}
+
+function createPill(text, variantClass) {
+  const span = document.createElement("span");
+  span.className = `pill ${variantClass}`.trim();
+  span.textContent = text;
+  return span;
+}
+
+function renderCellByColumnTitle(td, columnTitle, value) {
+  const v = normalizeText(value);
+  td.replaceChildren();
+
+  if (!v) return;
+
+  if (columnTitle === "Статус") {
+    const cls = v === "Выполнено" ? "done" : v === "В процессе" ? "progress" : "neutral";
+    td.appendChild(createPill(v, cls));
+    return;
+  }
+
+  if (columnTitle === "Приоритет") {
+    const cls = v === "Высокий" ? "danger" : v === "Средний" ? "amber" : "mint-outline";
+    td.appendChild(createPill(v, cls));
+    return;
+  }
+
+  if (columnTitle === "Тип задачи") {
+    const cls = v === "Доработка" ? "violet" : "mint";
+    td.appendChild(createPill(v, cls));
+    return;
+  }
+
+  if (columnTitle === "Оценка") {
+    const cls = v === "Высокая" ? "danger" : v === "Средняя" ? "amber" : "mint";
+    td.appendChild(createPill(v, cls));
+    return;
+  }
+
+  td.textContent = v;
+}
+
+function setCellValue(td, columnTitle, value) {
+  td.dataset.value = normalizeText(value);
+  renderCellByColumnTitle(td, columnTitle, td.dataset.value);
+}
+
+function getCellValue(td) {
+  if (!td) return "";
+  if (td.dataset.value !== undefined) return td.dataset.value;
+  return getCellText(td);
+}
+
+function startInlineEdit(td, columnTitle) {
+  if (!td || !columnTitle) return;
+  if (td.querySelector("input, select, textarea")) return;
+  if (td.closest("tr")?.classList.contains("new-task-row")) return;
+  if (columnTitle === "Название задачи" || columnTitle === "Срок") return;
+
+  const currentValue = getCellValue(td);
+
+  const commit = (nextValue) => {
+    setCellValue(td, columnTitle, nextValue);
+  };
+
+  const cancel = () => {
+    renderCellByColumnTitle(td, columnTitle, currentValue);
+  };
+
+  td.replaceChildren();
+
+  if (columnTitle === "Исполнитель") {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "cell-input";
+    input.value = currentValue;
+    input.placeholder = "Указать исполнителя";
+    td.appendChild(input);
+    input.focus();
+    input.select();
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        input.blur();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        cancel();
+      }
+    });
+    input.addEventListener("blur", () => commit(input.value));
+    return;
+  }
+
+  if (columnTitle === "Описание") {
+    const textarea = document.createElement("textarea");
+    textarea.className = "cell-textarea";
+    textarea.value = currentValue;
+    textarea.placeholder = "Добавить описание";
+    td.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    textarea.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        cancel();
+      }
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        textarea.blur();
+      }
+    });
+    textarea.addEventListener("blur", () => commit(textarea.value));
+    return;
+  }
+
+  const select = document.createElement("select");
+  select.className = "cell-select";
+  const options =
+    columnTitle === "Статус"
+      ? ["", "Не начато", "В процессе", "Выполнено"]
+      : columnTitle === "Приоритет"
+        ? ["", "Низкий", "Средний", "Высокий"]
+        : columnTitle === "Тип задачи"
+          ? ["", "Запрос фичи", "Доработка"]
+          : columnTitle === "Оценка"
+            ? ["", "Низкая", "Средняя", "Высокая"]
+            : [""];
+
+  for (const opt of options) {
+    const optionEl = document.createElement("option");
+    optionEl.value = opt;
+    optionEl.textContent = opt || "—";
+    select.appendChild(optionEl);
+  }
+
+  select.value = currentValue;
+  td.appendChild(select);
+  select.focus();
+
+  select.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      cancel();
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      select.blur();
+    }
+  });
+  select.addEventListener("change", () => commit(select.value));
+  select.addEventListener("blur", () => commit(select.value));
+}
 
 function resetTaskForm() {
   taskNameInput.value = "";
+  if (taskStatusInput) taskStatusInput.value = "Не начато";
 }
 
 function incrementCount(counterElement) {
@@ -73,6 +245,27 @@ tableBody.querySelectorAll(".date-trigger").forEach((trigger) => {
   trigger.textContent = formatDateRange(trigger.dataset.start, trigger.dataset.end);
 });
 
+// Initialize existing rows so editable columns render consistently.
+(() => {
+  if (!tableBody) return;
+  const headers = Array.from(tableHead?.querySelectorAll("th") || []);
+  const headerTitles = headers.map((th) => getCellText(th));
+
+  const editable = new Set(["Статус", "Исполнитель", "Приоритет", "Тип задачи", "Описание", "Оценка"]);
+  const rows = Array.from(tableBody.querySelectorAll("tr")).filter((r) => !r.classList.contains("new-task-row"));
+
+  for (const row of rows) {
+    const cells = Array.from(row.children);
+    for (let i = 0; i < cells.length; i++) {
+      const title = headerTitles[i];
+      if (!editable.has(title)) continue;
+      const td = cells[i];
+      const value = getCellText(td);
+      setCellValue(td, title, value);
+    }
+  }
+})();
+
 tableBody.addEventListener("click", (event) => {
   const deleteBtn = event.target.closest(".delete-task-btn");
   if (deleteBtn) {
@@ -93,6 +286,22 @@ tableBody.addEventListener("click", (event) => {
   openPopover(trigger);
 });
 
+// Inline editing for table columns (except task title and deadlines).
+tableBody.addEventListener("click", (event) => {
+  if (event.target.closest(".date-trigger")) return;
+  if (event.target.closest(".delete-task-btn")) return;
+
+  const td = event.target.closest("td");
+  if (!td) return;
+  const row = td.closest("tr");
+  if (!row || row.classList.contains("new-task-row")) return;
+
+  const colIndex = Array.from(row.children).indexOf(td);
+  const headers = Array.from(tableHead?.querySelectorAll("th") || []);
+  const columnTitle = getCellText(headers[colIndex]);
+  startInlineEdit(td, columnTitle);
+});
+
 saveBtn.addEventListener("click", () => {
   if (!activeTrigger) return;
   activeTrigger.dataset.start = startInput.value;
@@ -109,6 +318,8 @@ addTaskBtn.addEventListener("click", () => {
     taskNameInput.focus();
     return;
   }
+
+  const selectedStatus = normalizeText(taskStatusInput?.value || "") || "Не начато";
 
   const row = document.createElement("tr");
   row.dataset.userAdded = "true";
@@ -127,8 +338,13 @@ addTaskBtn.addEventListener("click", () => {
   titleCell.appendChild(titleWrap);
   row.appendChild(titleCell);
 
-  row.appendChild(document.createElement("td")); // status
-  row.appendChild(document.createElement("td")); // assignee
+  const statusCell = document.createElement("td");
+  setCellValue(statusCell, "Статус", selectedStatus);
+  row.appendChild(statusCell);
+
+  const assigneeCell = document.createElement("td");
+  setCellValue(assigneeCell, "Исполнитель", "");
+  row.appendChild(assigneeCell);
 
   const deadlineCell = document.createElement("td");
   const deadlineBtn = document.createElement("button");
@@ -140,10 +356,21 @@ addTaskBtn.addEventListener("click", () => {
   deadlineCell.appendChild(deadlineBtn);
   row.appendChild(deadlineCell);
 
-  row.appendChild(document.createElement("td")); // priority
-  row.appendChild(document.createElement("td")); // type
-  row.appendChild(document.createElement("td")); // description
-  row.appendChild(document.createElement("td")); // estimate
+  const priorityCell = document.createElement("td");
+  setCellValue(priorityCell, "Приоритет", "");
+  row.appendChild(priorityCell);
+
+  const typeCell = document.createElement("td");
+  setCellValue(typeCell, "Тип задачи", "");
+  row.appendChild(typeCell);
+
+  const descriptionCell = document.createElement("td");
+  setCellValue(descriptionCell, "Описание", "");
+  row.appendChild(descriptionCell);
+
+  const estimateCell = document.createElement("td");
+  setCellValue(estimateCell, "Оценка", "");
+  row.appendChild(estimateCell);
 
   const insertBeforeNode = tableBody.querySelector(".new-task-row");
   tableBody.insertBefore(row, insertBeforeNode || null);

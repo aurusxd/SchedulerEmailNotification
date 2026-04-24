@@ -171,6 +171,23 @@ html, body {
   background: #090c11;
 }
 
+.cell-input,
+.cell-select,
+.cell-textarea {
+  width: 100%;
+  border: 1px solid #3b4459;
+  border-radius: 8px;
+  padding: 7px 9px;
+  background: #1d2533;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.cell-textarea {
+  resize: vertical;
+  min-height: 64px;
+}
+
 .tasks-table th:last-child,
 .tasks-table td:last-child {
   border-right: none;
