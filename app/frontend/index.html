@@ -23,18 +23,17 @@
       <section class="dashboard-strip">
         <article class="stat-card">
           <span>Задач сегодня</span>
-          <strong id="tasksTodayCount">12</strong>
+          <strong id="tasksTodayCount">0</strong>
         </article>
         <article class="stat-card">
           <span>В работе</span>
-          <strong id="inProgressCount">4</strong>
+          <strong id="inProgressCount">0</strong>
         </article>
         <article class="stat-card">
           <span>Просрочено</span>
-          <strong id="overdueCount">1</strong>
+          <strong id="overdueCount">0</strong>
         </article>
         <article class="stat-card quick-actions">
-          <button class="btn" id="openTaskFormBtn" type="button">+ Новая задача</button>
           <button class="btn" type="button">Экспорт</button>
         </article>
       </section>
@@ -60,74 +59,49 @@
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>Улучшить тексты на сайте</td>
-              <td><span class="pill done">Выполнено</span></td>
-              <td></td>
-              <td>
-                <button class="date-trigger" type="button" data-start="2026-02-01" data-end="2026-02-03">02/01/2026 - 02/03/2026</button>
-              </td>
-              <td><span class="pill danger">Высокий</span></td>
-              <td><span class="pill violet">Доработка</span></td>
-              <td>Обновить заголовок, чтобы лучше передавать ценность продукта</td>
-              <td><span class="pill amber">Средняя</span></td>
-            </tr>
-            <tr>
-              <td>Обновить справочный центр и FAQ</td>
-              <td><span class="pill progress">В процессе</span></td>
-              <td></td>
-              <td>
-                <button class="date-trigger" type="button" data-start="2026-02-15" data-end="2026-02-20">02/15/2026 - 02/20/2026</button>
-              </td>
-              <td><span class="pill amber">Средний</span></td>
-              <td><span class="pill mint">Запрос фичи</span></td>
-              <td>Обновить документы поддержки под новый пользовательский сценарий</td>
-              <td><span class="pill mint">Низкая</span></td>
-            </tr>
-            <tr>
-              <td>Опубликовать релиз-ноты</td>
-              <td><span class="pill neutral">Не начато</span></td>
-              <td></td>
-              <td>
-                <button class="date-trigger" type="button" data-start="2026-02-20" data-end="2026-02-28">02/20/2026 - 02/28/2026</button>
-              </td>
-              <td><span class="pill mint-outline">Низкий</span></td>
-              <td><span class="pill mint">Запрос фичи</span></td>
-              <td>Добавить обновления продукта в ближайшие релиз-ноты</td>
-              <td><span class="pill mint">Низкая</span></td>
-            </tr>
-            <tr>
-              <td>Купить пельмени</td>
-              <td><span class="pill neutral">Не начато</span></td>
-              <td></td>
-              <td>
-                <button class="date-trigger" type="button" data-start="2026-04-22" data-end="2026-04-22">04/22/2026</button>
-              </td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-            </tr>
             <tr class="new-task-row">
               <td>
                 <div class="inline-name-cell">
                   <input id="taskNameInput" class="table-input" type="text" placeholder="Название задачи">
-                  <button class="btn btn-primary btn-inline-add" id="addTaskBtn" type="button">Добавить</button>
+                  <button class="btn btn-primary btn-inline-add hidden" id="addTaskBtn" type="button">Добавить</button>
                 </div>
               </td>
               <td>
-                <select id="taskStatusInput" class="table-input" aria-label="Статус задачи">
+                <button id="taskStatusDisplay" class="cell-display" type="button" aria-label="Выбрать статус задачи">Не начато</button>
+                <select id="taskStatusInput" class="table-input is-collapsed" aria-label="Статус задачи">
                   <option value="Не начато" selected>Не начато</option>
                   <option value="В процессе">В процессе</option>
                   <option value="Выполнено">Выполнено</option>
                 </select>
               </td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
+              <td>
+                <input id="taskAssigneeInput" class="table-input hidden" type="text" placeholder="Исполнитель">
+              </td>
+              <td>
+                <button id="taskDeadlineTrigger" class="date-trigger hidden" type="button" data-start="" data-end="">Указать дедлайн</button>
+              </td>
+              <td>
+                <select id="taskPriorityInput" class="table-input hidden" aria-label="Приоритет">
+                  <option value="Низкий">Низкий</option>
+                  <option value="Средний">Средний</option>
+                  <option value="Высокий">Высокий</option>
+                </select>
+              </td>
+              <td>
+                <button id="taskTypeDisplay" class="cell-display" type="button" aria-label="Указать тип задачи">Указать тип</button>
+                <input id="taskTypeInput" class="table-input is-collapsed" type="text" placeholder="Тип задачи">
+              </td>
+              <td>
+                <textarea id="taskDescriptionInput" class="table-input hidden" placeholder="Описание"></textarea>
+              </td>
+              <td>
+                <select id="taskEstimateInput" class="table-input hidden" aria-label="Оценка">
+                  <option value="" selected>Оценка…</option>
+                  <option value="Низкая">Низкая</option>
+                  <option value="Средняя">Средняя</option>
+                  <option value="Высокая">Высокая</option>
+                </select>
+              </td>
             </tr>
           </tbody>
         </table>

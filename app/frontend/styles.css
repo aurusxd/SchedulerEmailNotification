@@ -214,6 +214,16 @@ html, body {
   background: #0b1119;
 }
 
+/* Compact add-row until task title is typed. */
+.new-task-row.is-compact td:not(:first-child) {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.new-task-row.is-compact td:not(:first-child) > * {
+  display: none !important;
+}
+
 .table-input {
   width: 100%;
   border: 1px solid #3b4459;
@@ -222,6 +232,28 @@ html, body {
   background: #1d2533;
   color: var(--text);
   font-size: 13px;
+}
+
+.table-input.is-collapsed {
+  display: none;
+}
+
+.cell-display {
+  width: 100%;
+  text-align: left;
+  border: 1px dashed #3b4459;
+  border-radius: 8px;
+  padding: 7px 9px;
+  background: #0f1420;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.cell-display.has-value {
+  border-style: solid;
+  background: #121a27;
+  color: var(--text);
 }
 
 .inline-name-cell {
@@ -247,6 +279,22 @@ html, body {
   white-space: nowrap;
   padding: 7px 10px;
 }
+
+/* Hide delete action until user intent (hover/focus). */
+.delete-task-btn {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(1px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.tasks-table tbody tr:hover .delete-task-btn,
+.tasks-table tbody tr:focus-within .delete-task-btn {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
 
 .inline-date-inputs {
   display: grid;

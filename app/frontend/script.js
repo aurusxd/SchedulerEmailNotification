@@ -1,8 +1,15 @@
 const tableBody = document.querySelector(".tasks-table tbody");
-const openTaskFormBtn = document.getElementById("openTaskFormBtn");
 const addTaskBtn = document.getElementById("addTaskBtn");
 const taskNameInput = document.getElementById("taskNameInput");
 const taskStatusInput = document.getElementById("taskStatusInput");
+const taskStatusDisplay = document.getElementById("taskStatusDisplay");
+const taskTypeInput = document.getElementById("taskTypeInput");
+const taskTypeDisplay = document.getElementById("taskTypeDisplay");
+const taskAssigneeInput = document.getElementById("taskAssigneeInput");
+const taskDeadlineTrigger = document.getElementById("taskDeadlineTrigger");
+const taskPriorityInput = document.getElementById("taskPriorityInput");
+const taskDescriptionInput = document.getElementById("taskDescriptionInput");
+const taskEstimateInput = document.getElementById("taskEstimateInput");
 const tasksTodayCount = document.getElementById("tasksTodayCount");
 const inProgressCount = document.getElementById("inProgressCount");
 const overdueCount = document.getElementById("overdueCount");
@@ -14,6 +21,7 @@ const closeBtn = document.getElementById("closePopoverBtn");
 let activeTrigger = null;
 const table = document.querySelector(".tasks-table");
 const tableHead = table?.querySelector("thead");
+const newTaskRow = tableBody?.querySelector(".new-task-row") || null;
 
 function normalizeText(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
@@ -74,12 +82,53 @@ function renderCellByColumnTitle(td, columnTitle, value) {
 function setCellValue(td, columnTitle, value) {
   td.dataset.value = normalizeText(value);
   renderCellByColumnTitle(td, columnTitle, td.dataset.value);
+  if (columnTitle === "Статус") recomputeCounters();
 }
 
 function getCellValue(td) {
   if (!td) return "";
   if (td.dataset.value !== undefined) return td.dataset.value;
   return getCellText(td);
+}
+
+function parseIsoDate(value) {
+  const v = normalizeText(value);
+  if (!v) return null;
+  const [y, m, d] = v.split("-").map((n) => Number.parseInt(n, 10));
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+}
+
+function recomputeCounters() {
+  if (!tableBody) return;
+
+  const rows = Array.from(tableBody.querySelectorAll("tr")).filter((r) => !r.classList.contains("new-task-row"));
+  const total = rows.length;
+
+  const statusIndex = getColumnIndexByTitle("Статус");
+  const deadlineIndex = getColumnIndexByTitle("Срок");
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  let inProgress = 0;
+  let overdue = 0;
+
+  for (const row of rows) {
+    const statusTd = statusIndex >= 0 ? row.children[statusIndex] : null;
+    const status = normalizeText(getCellValue(statusTd));
+    if (status === "В процессе") inProgress++;
+
+    const deadlineTd = deadlineIndex >= 0 ? row.children[deadlineIndex] : null;
+    const trigger = deadlineTd?.querySelector?.(".date-trigger") || null;
+    const endIso = trigger?.dataset?.end || trigger?.dataset?.start || "";
+    const endDate = parseIsoDate(endIso);
+    if (endDate && endDate < today && status !== "Выполнено") overdue++;
+  }
+
+  if (tasksTodayCount) tasksTodayCount.textContent = String(total);
+  if (inProgressCount) inProgressCount.textContent = String(inProgress);
+  if (overdueCount) overdueCount.textContent = String(overdue);
 }
 
 function startInlineEdit(td, columnTitle) {
@@ -186,7 +235,97 @@ function startInlineEdit(td, columnTitle) {
 function resetTaskForm() {
   taskNameInput.value = "";
   if (taskStatusInput) taskStatusInput.value = "Не начато";
+  if (taskTypeInput) taskTypeInput.value = "";
+  if (taskAssigneeInput) taskAssigneeInput.value = "";
+  if (taskPriorityInput) taskPriorityInput.value = "";
+  if (taskDescriptionInput) taskDescriptionInput.value = "";
+  if (taskEstimateInput) taskEstimateInput.value = "";
+  if (taskDeadlineTrigger) {
+    taskDeadlineTrigger.dataset.start = "";
+    taskDeadlineTrigger.dataset.end = "";
+    taskDeadlineTrigger.textContent = formatDateRange("", "");
+  }
+  syncNewTaskRowEditors();
+  addTaskBtn.classList.add("hidden");
 }
+
+function syncAddButtonVisibility() {
+  const hasTitle = Boolean(taskNameInput.value.trim());
+  addTaskBtn.classList.toggle("hidden", !hasTitle);
+  newTaskRow?.classList.toggle("is-compact", !hasTitle);
+  taskStatusDisplay?.classList.toggle("hidden", !hasTitle);
+  taskTypeDisplay?.classList.toggle("hidden", !hasTitle);
+  taskAssigneeInput?.classList.toggle("hidden", !hasTitle);
+  taskDeadlineTrigger?.classList.toggle("hidden", !hasTitle);
+  taskPriorityInput?.classList.toggle("hidden", !hasTitle);
+  taskDescriptionInput?.classList.toggle("hidden", !hasTitle);
+  taskEstimateInput?.classList.toggle("hidden", !hasTitle);
+}
+
+function setDisplayValue(displayEl, value, emptyLabel) {
+  if (!displayEl) return;
+  const v = normalizeText(value);
+  const hasValue = Boolean(v);
+  displayEl.textContent = hasValue ? v : emptyLabel;
+  displayEl.classList.toggle("has-value", hasValue);
+}
+
+function collapseEditor({ displayEl, editorEl }) {
+  displayEl?.classList.remove("hidden");
+  editorEl?.classList.add("is-collapsed");
+}
+
+function expandEditor({ displayEl, editorEl }) {
+  displayEl?.classList.add("hidden");
+  editorEl?.classList.remove("is-collapsed");
+}
+
+function syncNewTaskRowEditors() {
+  setDisplayValue(taskStatusDisplay, taskStatusInput?.value || "Не начато", "Выбрать статус");
+  setDisplayValue(taskTypeDisplay, taskTypeInput?.value || "", "Указать тип");
+  collapseEditor({ displayEl: taskStatusDisplay, editorEl: taskStatusInput });
+  collapseEditor({ displayEl: taskTypeDisplay, editorEl: taskTypeInput });
+}
+
+taskStatusDisplay?.addEventListener("click", () => {
+  expandEditor({ displayEl: taskStatusDisplay, editorEl: taskStatusInput });
+  taskStatusInput?.focus();
+});
+
+taskStatusInput?.addEventListener("change", () => {
+  setDisplayValue(taskStatusDisplay, taskStatusInput.value, "Выбрать статус");
+});
+
+taskStatusInput?.addEventListener("blur", () => {
+  setDisplayValue(taskStatusDisplay, taskStatusInput.value, "Выбрать статус");
+  collapseEditor({ displayEl: taskStatusDisplay, editorEl: taskStatusInput });
+});
+
+taskTypeDisplay?.addEventListener("click", () => {
+  expandEditor({ displayEl: taskTypeDisplay, editorEl: taskTypeInput });
+  taskTypeInput?.focus();
+  taskTypeInput?.select();
+});
+
+taskTypeInput?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    taskTypeInput.blur();
+  } else if (e.key === "Escape") {
+    e.preventDefault();
+    taskTypeInput.value = "";
+    taskTypeInput.blur();
+  }
+});
+
+taskTypeInput?.addEventListener("blur", () => {
+  setDisplayValue(taskTypeDisplay, taskTypeInput.value, "Указать тип");
+  collapseEditor({ displayEl: taskTypeDisplay, editorEl: taskTypeInput });
+});
+
+// Ensure initial state for add-row editors.
+syncNewTaskRowEditors();
+syncAddButtonVisibility();
 
 function incrementCount(counterElement) {
   if (!counterElement) return;
@@ -235,12 +374,6 @@ function closePopover() {
   activeTrigger = null;
 }
 
-openTaskFormBtn.addEventListener("click", () => {
-  const inlineTaskRow = tableBody.querySelector(".new-task-row");
-  if (inlineTaskRow) inlineTaskRow.scrollIntoView({ behavior: "smooth", block: "center" });
-  taskNameInput.focus();
-});
-
 tableBody.querySelectorAll(".date-trigger").forEach((trigger) => {
   trigger.textContent = formatDateRange(trigger.dataset.start, trigger.dataset.end);
 });
@@ -266,6 +399,8 @@ tableBody.querySelectorAll(".date-trigger").forEach((trigger) => {
   }
 })();
 
+recomputeCounters();
+
 tableBody.addEventListener("click", (event) => {
   const deleteBtn = event.target.closest(".delete-task-btn");
   if (deleteBtn) {
@@ -273,9 +408,7 @@ tableBody.addEventListener("click", (event) => {
     if (row) {
       if (activeTrigger && row.contains(activeTrigger)) closePopover();
       row.remove();
-      decrementCount(tasksTodayCount);
-      decrementCount(inProgressCount);
-      decrementCount(overdueCount);
+      recomputeCounters();
     }
     return;
   }
@@ -308,6 +441,7 @@ saveBtn.addEventListener("click", () => {
   activeTrigger.dataset.end = endInput.value;
   activeTrigger.textContent = formatDateRange(startInput.value, endInput.value);
   closePopover();
+  recomputeCounters();
 });
 
 closeBtn.addEventListener("click", closePopover);
@@ -316,10 +450,18 @@ addTaskBtn.addEventListener("click", () => {
   const title = taskNameInput.value.trim();
   if (!title) {
     taskNameInput.focus();
+    syncAddButtonVisibility();
     return;
   }
 
   const selectedStatus = normalizeText(taskStatusInput?.value || "") || "Не начато";
+  const typedTaskType = normalizeText(taskTypeInput?.value || "");
+  const typedAssignee = normalizeText(taskAssigneeInput?.value || "");
+  const selectedPriority = normalizeText(taskPriorityInput?.value || "");
+  const typedDescription = normalizeText(taskDescriptionInput?.value || "");
+  const selectedEstimate = normalizeText(taskEstimateInput?.value || "");
+  const deadlineStart = taskDeadlineTrigger?.dataset?.start || "";
+  const deadlineEnd = taskDeadlineTrigger?.dataset?.end || "";
 
   const row = document.createElement("tr");
   row.dataset.userAdded = "true";
@@ -343,41 +485,39 @@ addTaskBtn.addEventListener("click", () => {
   row.appendChild(statusCell);
 
   const assigneeCell = document.createElement("td");
-  setCellValue(assigneeCell, "Исполнитель", "");
+  setCellValue(assigneeCell, "Исполнитель", typedAssignee);
   row.appendChild(assigneeCell);
 
   const deadlineCell = document.createElement("td");
   const deadlineBtn = document.createElement("button");
   deadlineBtn.className = "date-trigger";
   deadlineBtn.type = "button";
-  deadlineBtn.dataset.start = "";
-  deadlineBtn.dataset.end = "";
-  deadlineBtn.textContent = formatDateRange("", "");
+  deadlineBtn.dataset.start = deadlineStart;
+  deadlineBtn.dataset.end = deadlineEnd;
+  deadlineBtn.textContent = formatDateRange(deadlineStart, deadlineEnd);
   deadlineCell.appendChild(deadlineBtn);
   row.appendChild(deadlineCell);
 
   const priorityCell = document.createElement("td");
-  setCellValue(priorityCell, "Приоритет", "");
+  setCellValue(priorityCell, "Приоритет", selectedPriority);
   row.appendChild(priorityCell);
 
   const typeCell = document.createElement("td");
-  setCellValue(typeCell, "Тип задачи", "");
+  setCellValue(typeCell, "Тип задачи", typedTaskType);
   row.appendChild(typeCell);
 
   const descriptionCell = document.createElement("td");
-  setCellValue(descriptionCell, "Описание", "");
+  setCellValue(descriptionCell, "Описание", typedDescription);
   row.appendChild(descriptionCell);
 
   const estimateCell = document.createElement("td");
-  setCellValue(estimateCell, "Оценка", "");
+  setCellValue(estimateCell, "Оценка", selectedEstimate);
   row.appendChild(estimateCell);
 
   const insertBeforeNode = tableBody.querySelector(".new-task-row");
   tableBody.insertBefore(row, insertBeforeNode || null);
 
-  incrementCount(tasksTodayCount);
-  incrementCount(inProgressCount);
-  incrementCount(overdueCount);
+  recomputeCounters();
 
   resetTaskForm();
   taskNameInput.focus();
@@ -393,3 +533,5 @@ taskNameInput.addEventListener("keydown", (event) => {
   event.preventDefault();
   addTaskBtn.click();
 });
+
+taskNameInput.addEventListener("input", syncAddButtonVisibility);
