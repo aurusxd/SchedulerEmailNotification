@@ -10,6 +10,9 @@ class Task(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(255), nullable=False)
+    status = Column(String(100), nullable=False)
+    priority = Column(String(100), nullable=False)
+    type = Column(String(70), nullable=False)
     description = Column(Text, nullable=True)
     start_date = Column(DateTime, server_default=func.now())
     end_date = Column(DateTime, nullable=False)
