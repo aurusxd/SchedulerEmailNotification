@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from hashlib import sha256
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
@@ -17,8 +18,12 @@ from app.database.models.Notification import Notification
 from app.database.models.Task import Task
 from app.database.models.User import User
 from app.depends import provider
+from app.services.deadline_scheduler import DeadlineSchedulerService
 
 router = APIRouter(prefix="/api", tags=["api"])
+
+
+deadline_scheduler = DeadlineSchedulerService()
 
 
 def hash_password(raw_password: str) -> str:
@@ -159,7 +164,19 @@ async def list_notifications(
     return list(result.scalars().all())
 
 
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    deadline_scheduler.start()
+    try:
+        yield
+    finally:
+        await deadline_scheduler.shutdown()
+
+
 def create_app() -> FastAPI:
-    app = FastAPI(title="Scheduler Email Notification API")
+    app = FastAPI(
+        title="Scheduler Email Notification API",
+        lifespan=lifespan,
+    )
     app.include_router(router)
     return app

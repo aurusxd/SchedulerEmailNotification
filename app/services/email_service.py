@@ -1,22 +1,21 @@
-import os
 import smtplib
+from pathlib import Path
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from jinja2 import Environment, FileSystemLoader
 
-from dotenv import load_dotenv
-
-load_dotenv()
+from app.config import config
 
 
 class EmailService:
     def __init__(self) -> None:
-        self.smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
-        self.smtp_port = int(os.getenv("SMTP_PORT", "465"))
-        self.smtp_email = os.getenv("SMTP_EMAIL")
-        self.smtp_password = os.getenv("SMTP_PASSWORD")
-        self.smtp_from = os.getenv("SMTP_FROM", self.smtp_email)
-        self.env = Environment(loader=FileSystemLoader("app/services/templates"))
+        self.smtp_host = config.smtp.SMTP_HOST
+        self.smtp_port = config.smtp.SMTP_PORT
+        self.smtp_email = config.smtp.SMTP_EMAIL
+        self.smtp_password = config.smtp.SMTP_PASSWORD
+        self.smtp_from = config.smtp.SMTP_FROM or self.smtp_email
+        templates_dir = Path(__file__).resolve().parent / "templates"
+        self.env = Environment(loader=FileSystemLoader(str(templates_dir)))
 
         if not self.smtp_email:
             raise ValueError("SMTP_EMAIL is not set")
@@ -51,18 +50,23 @@ class EmailService:
             server.login(self.smtp_email, self.smtp_password)
             server.sendmail(self.smtp_from, to_email, msg.as_string())
 
+    def send_notification_email(
+        self,
+        to_email: str,
+        username: str,
+        message: str,
+        subject: str = "Уведомление о дедлайне",
+    ) -> None:
+        html_body = self.render_template(
+            "deadline_notification.html",
+            {
+                "username": username,
+                "message": message,
+            },
+        )
 
-def send_notification_email(self, to_email, username, message):
-    html_body = self.render_template(
-        "email/deadline_notification.html",
-        {
-            "username": username,
-            "message": message,
-        },
-    )
-
-    self.send_html_email(
-        to_email=to_email,
-        subject="Уведомление",
-        html_body=html_body,
-    )
+        self.send_html_email(
+            to_email=to_email,
+            subject=subject,
+            html_body=html_body,
+        )

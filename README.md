@@ -72,6 +72,16 @@ POSTGRES_DB=scheduler_db
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_EMAIL=your_email@gmail.com
+SMTP_PASSWORD=your_app_password
+SMTP_FROM=TaskNotify <your_email@gmail.com>
+
+SCHEDULER_ENABLED=true
+SCHEDULER_INTERVAL_SECONDS=60
+SCHEDULER_TIMEZONE=Asia/Bangkok
+
 ```
 
 #### 2. Запустить PostgreSQL
@@ -92,6 +102,28 @@ uv run alembic upgrade head
 # Локальный запуск с автоперезагрузкой
 uv run main.py
 ```
+
+### Настройка уведомлений по email
+
+1. Заполни SMTP-переменные в `.env`.
+2. Для Gmail включи двухфакторную аутентификацию и создай `App Password`.
+3. Укажи этот пароль в `SMTP_PASSWORD`, а в `SMTP_EMAIL` - адрес отправителя.
+4. Запусти приложение: при старте поднимется `APScheduler`.
+5. Планировщик раз в `SCHEDULER_INTERVAL_SECONDS` проверяет задачи, у которых `end_date <= now`.
+6. Если для задачи еще нет успешной записи в `notifications` со статусом `Sent`, сервис отправит письмо и создаст запись в таблице `notifications`.
+
+### Как это работает в проекте
+
+- `APScheduler` запускается вместе с FastAPI через lifecycle приложения.
+- Проверка дедлайнов находится в `app/services/deadline_scheduler.py`.
+- Отправка email идет через `app/services/email_service.py`.
+- Шаблон письма лежит в `app/services/templates/deadline_notification.html`.
+
+### Важные замечания
+
+- Если SMTP не настроен, API запустится, но планировщик уведомлений не стартует.
+- Повторные письма для одной и той же задачи не отправляются, если уже есть успешная запись `Sent`.
+- Если отправка письма упала, в `notifications` создается запись со статусом `Failed`, и задача будет повторно проверена на следующем цикле.
 
 
 
