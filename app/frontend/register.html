@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskNotify - Регистрация</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="auth-page" data-auth-mode="register">
+  <main class="auth-shell">
+    <section class="auth-hero">
+      <h1>TaskNotify</h1>
+      <p>Создай профиль и начни вести задачи с автоматическими уведомлениями на почту.</p>
+    </section>
+
+    <section class="auth-card" aria-label="Регистрация">
+      <h2>Создание аккаунта</h2>
+      <p class="auth-subtitle">Займет меньше минуты</p>
+
+      <form id="authForm" class="auth-form-vertical">
+        <label class="field">
+          <span>Имя пользователя</span>
+          <input id="usernameInput" type="text" placeholder="например, nikit" required>
+        </label>
+        <label class="field">
+          <span>Email</span>
+          <input id="emailInput" type="email" placeholder="name@example.com" required>
+        </label>
+        <label class="field">
+          <span>Пароль</span>
+          <input id="passwordInput" type="password" placeholder="Минимум 6 символов" required>
+        </label>
+        <button class="btn btn-primary btn-auth-submit" type="submit">Зарегистрироваться</button>
+      </form>
+
+      <p id="authFeedback" class="auth-feedback hidden"></p>
+      <p class="auth-switch-text">
+        Уже есть аккаунт?
+        <a href="./auth.html">Войти</a>
+      </p>
+    </section>
+  </main>
+
+  <script type="module" src="./auth.js"></script>
+</body>
+</html>

@@ -6,6 +6,11 @@ from sqlalchemy import pool
 from alembic import context
 
 from app.database.models.base import Base
+from app.database.models.Notification import Notification
+from app.database.models.Task import Task
+from app.database.models.User import User
+
+_ = (User, Task, Notification)
 
 
 # this is the Alembic Config object, which provides

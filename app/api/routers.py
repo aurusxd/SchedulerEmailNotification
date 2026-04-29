@@ -1,16 +1,85 @@
+from contextlib import asynccontextmanager
+from hashlib import sha256
+
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.notification import NotificationCreate, NotificationRead
 from app.api.task import TaskCreate, TaskRead
-from app.api.user import UserCreate, UserRead
+from app.api.user import (
+    AuthResponse,
+    LoginRequest,
+    RegisterRequest,
+    UserCreate,
+    UserRead,
+)
 from app.database.models.Notification import Notification
 from app.database.models.Task import Task
 from app.database.models.User import User
 from app.depends import provider
+from app.services.deadline_scheduler import DeadlineSchedulerService
 
 router = APIRouter(prefix="/api", tags=["api"])
+
+
+deadline_scheduler = DeadlineSchedulerService()
+
+
+def hash_password(raw_password: str) -> str:
+    return sha256(raw_password.encode("utf-8")).hexdigest()
+
+
+@router.post(
+    "/auth/register",
+    response_model=AuthResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def register_user(
+    payload: RegisterRequest,
+    session: AsyncSession = Depends(provider.get_session),
+) -> AuthResponse:
+    existing_user_result = await session.execute(
+        select(User).where(
+            or_(
+                User.username == payload.username,
+                User.email_address == payload.email_address,
+            )
+        )
+    )
+    if existing_user_result.scalar_one_or_none() is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username or email already exists",
+        )
+
+    user = User(
+        username=payload.username,
+        email_address=payload.email_address,
+        password_hash=hash_password(payload.password),
+    )
+    session.add(user)
+    await session.flush()
+    await session.refresh(user)
+    return AuthResponse(message="Registration successful", user=user)
+
+
+@router.post("/auth/login", response_model=AuthResponse)
+async def login_user(
+    payload: LoginRequest,
+    session: AsyncSession = Depends(provider.get_session),
+) -> AuthResponse:
+    result = await session.execute(
+        select(User).where(User.username == payload.username)
+    )
+    user = result.scalar_one_or_none()
+    if user is None or user.password_hash != hash_password(payload.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password",
+        )
+
+    return AuthResponse(message="Login successful", user=user)
 
 
 @router.post("/users", response_model=UserRead, status_code=status.HTTP_201_CREATED)
@@ -95,7 +164,19 @@ async def list_notifications(
     return list(result.scalars().all())
 
 
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    deadline_scheduler.start()
+    try:
+        yield
+    finally:
+        await deadline_scheduler.shutdown()
+
+
 def create_app() -> FastAPI:
-    app = FastAPI(title="Scheduler Email Notification API")
+    app = FastAPI(
+        title="Scheduler Email Notification API",
+        lifespan=lifespan,
+    )
     app.include_router(router)
     return app

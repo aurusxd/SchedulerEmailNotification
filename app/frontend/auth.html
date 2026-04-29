@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskNotify - Вход</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="auth-page" data-auth-mode="login">
+  <main class="auth-shell">
+    <section class="auth-hero">
+      <h1>TaskNotify</h1>
+      <p>Управляй дедлайнами и получай email-напоминания без пропусков.</p>
+    </section>
+
+    <section class="auth-card" aria-label="Вход в аккаунт">
+      <h2>Вход в аккаунт</h2>
+      <p class="auth-subtitle">Рады видеть снова</p>
+
+      <form id="authForm" class="auth-form-vertical">
+        <label class="field">
+          <span>Имя пользователя</span>
+          <input id="usernameInput" type="text" placeholder="например, nikit" required>
+        </label>
+        <label class="field">
+          <span>Пароль</span>
+          <input id="passwordInput" type="password" placeholder="Введите пароль" required>
+        </label>
+        <button class="btn btn-primary btn-auth-submit" type="submit">Войти</button>
+      </form>
+
+      <p id="authFeedback" class="auth-feedback hidden"></p>
+      <p class="auth-switch-text">
+        Нет аккаунта?
+        <a href="./register.html">Создать аккаунт</a>
+      </p>
+    </section>
+  </main>
+
+  <script type="module" src="./auth.js"></script>
+</body>
+</html>
